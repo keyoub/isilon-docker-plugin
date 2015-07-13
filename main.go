@@ -1,20 +1,31 @@
 package main
 
 import (
-	"io/ioutil"
+	"flag"
+	"fmt"
 	"log"
-	"net/http"
+	"os"
+
+	"github.com/calavera/dkvolume"
 )
 
+const socketAddress = "/usr/share/docker/plugins/isilon.sock"
+
 func main() {
-	address := []byte("http://127.0.0.1:8080")
-	err := ioutil.WriteFile(
-		"/usr/share/docker/plugins/isilon.spec", address, 0777)
-	if err != nil {
-		log.Fatal(err)
+	var clusterPath string
+
+	flag.StringVar(&clusterPath, "path", "",
+		"Local directory path where Isilon cluster is mounted on")
+
+	flag.Parse()
+
+	if _, err := os.Stat(clusterPath); os.IsNotExist(err) {
+		fmt.Printf("no such file or directory: %s\n", clusterPath)
+		os.Exit(1)
 	}
 
-	router := NewRouter()
-
-	log.Fatal(http.ListenAndServe(":8080", router))
+	driver := newIsilonDriver(clusterPath)
+	handler := dkvolume.NewHandler(driver)
+	log.Printf("listening on %s\n", socketAddress)
+	log.Fatal(handler.ServeUnix("root", socketAddress))
 }
