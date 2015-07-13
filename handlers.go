@@ -8,14 +8,14 @@ import (
 	"os"
 )
 
+const (
+	defaultContentTypeV1          = "appplication/vnd.docker.plugins.v1+json"
+	defaultImplementationManifest = `{"Implements": ["VolumeDriver"]}`
+)
+
 func Handshake(resp http.ResponseWriter, req *http.Request) {
-	err := json.NewEncoder(resp).Encode(&HandshakeResp{
-		[]string{"VolumeDriver"},
-	})
-	if err != nil {
-		log.Fatal("handshake encode:", err)
-		panic(err)
-	}
+	resp.Header().Set("Content-Type", defaultContentTypeV1)
+	fmt.Fprintln(resp, defaultImplementationManifest)
 }
 
 func CreateVolume(resp http.ResponseWriter, req *http.Request) {

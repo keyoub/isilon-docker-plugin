@@ -7,6 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+)
+
+const (
+	pluginSpecDir = "/usr/share/docker/plugins"
+	tcpAddress    = "http://127.0.0.1:8080"
 )
 
 var (
@@ -26,14 +32,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	address := []byte("http://127.0.0.1:8080")
-	err := ioutil.WriteFile(
-		"/usr/share/docker/plugins/isilon.spec", address, 0777)
+	err := writeSpec("isilon", tcpAddress)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to write spec file.")
 	}
 
 	router := NewRouter()
 
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func writeSpec(name, addr string) error {
+	spec := filepath.Join(pluginSpecDir, name+".spec")
+	url := "tcp://" + addr
+	return ioutil.WriteFile(spec, []byte(url), 0644)
 }
