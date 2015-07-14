@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/calavera/dkvolume"
+	"github.west.isilon.com/bkeyoumarsi/docker-plugin/driver"
 )
 
 const socketAddress = "/usr/share/docker/plugins/isilon.sock"
@@ -24,8 +25,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	driver := newIsilonDriver(clusterPath)
-	handler := dkvolume.NewHandler(driver)
+	d := driver.NewIsilonDriver(clusterPath)
+	handler := dkvolume.NewHandler(d)
 	log.Printf("listening on %s\n", socketAddress)
 	log.Fatal(handler.ServeUnix("root", socketAddress))
 }
