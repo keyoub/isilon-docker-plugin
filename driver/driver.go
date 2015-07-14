@@ -1,4 +1,4 @@
-package main
+package driver
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ type isiDriver struct {
 	//mutex       sync.Mutex
 }
 
-func newIsilonDriver(clusterPath string) isiDriver {
+func NewIsilonDriver(clusterPath string) isiDriver {
 	d := isiDriver{
 		clusterPath: clusterPath,
 		volumes:     map[string]*volume{},
