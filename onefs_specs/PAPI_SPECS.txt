@@ -1,0 +1,119 @@
+# PAPI Handler Specs
+The following are the PAPI handler specs needed for the volume manager on
+Isilon clusters
+
+URLs:
+
+GET     /3/docker/volumes/<name*>
+POST    /3/docker/volumes
+PUT     /3/docker/volumes/<name>
+DELETE  /3/docker/volumes/<name>
+
+
+Request Contents:
+
+=============================================
+
+GET /3/docker/volumes/<name*>
+
+Success:
+	     Headers:
+	         200 OK
+	     Body:
+	     {
+	         "volumes": [
+              {
+                   "id": <string>,
+                   "connections": <integer>,
+                   "mountpoint": <string>
+
+               }
+               ...
+	         ]
+	     }
+
+Failure:
+	    Headers:
+	        500|400 STATUS
+	    Body:
+	    {
+	        "message": "Error message"
+	    }
+
+Fields:
+        id:
+          Unique volume ID
+	      connections:
+	        Number of containers attached to the volume
+	      mountpoint:
+	        Unique mount point for each volume on client filesystem
+
+=============================================
+
+POST /3/docker/volumes
+
+BODY:
+	    {
+	        "name"     : <string>,             // required
+	    }
+
+Success:
+	     Headers:
+	         204 NO CONTENT
+	     Body:
+
+Failure:
+	    Headers:
+	        500|400 STATUS
+	    Body:
+	    {
+	        "message": "Error message"
+	    }
+
+Fields:
+        name:
+          Volume name to be created
+
+=============================================
+
+TODO: TBD
+PUT /3/docker/volumes/<name>
+
+BODY:
+	    {
+	        //"name"     : <string>,             // required
+	    }
+
+Success:
+	     Headers:
+	         204 NO CONTENT
+	     Body:
+
+Failure:
+	    Headers:
+	        500|400 STATUS
+	    Body:
+	    {
+	        "message": "Error message"
+	    }
+
+Fields:
+        name:
+          Volume name to be created
+
+=============================================
+
+DELETE /3/docker/volumes/<name>
+
+Success:
+	     Headers:
+	         204 NO CONTENT
+	     Body:
+
+Failure:
+	    Headers:
+	        500|400 STATUS
+	    Body:
+	    {
+	        "message": "Error message"
+	    }
