@@ -9,27 +9,27 @@ import (
 	"github.com/calavera/dkvolume"
 )
 
+const mountPoint = "/tmp/isilon/volumes/"
+
 type volume struct {
 	name        string
 	connections int
 }
 
 type isiDriver struct {
-	clusterPath string
-	volumes     map[string]*volume
+	volumes map[string]*volume
 	//mutex       sync.Mutex
 }
 
-func NewIsilonDriver(clusterPath string) isiDriver {
+func NewIsilonDriver() isiDriver {
 	d := isiDriver{
-		clusterPath: clusterPath,
-		volumes:     map[string]*volume{},
+		volumes: map[string]*volume{},
 	}
 	return d
 }
 
 func (d *isiDriver) mountpoint(name string) string {
-	return filepath.Join(d.clusterPath, name)
+	return filepath.Join(mountPoint, name)
 }
 
 func (d isiDriver) Create(req dkvolume.Request) dkvolume.Response {
