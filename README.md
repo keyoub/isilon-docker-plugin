@@ -11,7 +11,7 @@ are hosted on an Isilon cluster therefore making all Isilon data management tool
 - Install and setup Go environment: http://golang.org/doc/install
 - Install EMC Isilon volume-driver plugin for Docker containers
 ```bash
-$ git clone https://github.west.isilon.com/bkeyoumarsi/docker-plugin \  $GOPATH/src/github.west.isilon.com/bkeyoumarsi/docker-plugin
+$ git clone https://github.west.isilon.com/bkeyoumarsi/docker-plugin $GOPATH/src/github.west.isilon.com/bkeyoumarsi/docker-plugin
 $ cd $GOPATH/src/github.west.isilon.com/bkeyoumarsi/docker-plugin
 $ make install
 ```
