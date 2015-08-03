@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	socketAddress = "/usr/share/docker/plugins/isilon.sock"
+	socketAddress = "/run/docker/plugins/isilon.sock"
 	mountPoint    = "/tmp/isilon/volumes/"
 )
 
@@ -23,11 +23,12 @@ func main() {
 	)
 
 	flag.StringVar(&clusterIP, "cluster-ip", "",
-		"Isilon cluster ip in form of <X.X.X.X>")
+		"Isilon cluster ip address <x.x.x.x>")
 
 	flag.Parse()
 
 	err := mountCluster(clusterIP)
+	defer unMountCluster()
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -53,4 +54,19 @@ func mountCluster(clusterIP string) error {
 		}
 	}
 	return nil
+}
+
+func unMountCluster() {
+	// unmount cluster
+	cmd := exec.Command("umount", mountPoint)
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal("Failed to unmount cluster")
+		return
+	}
+
+	err = os.RemoveAll("/tmp/isilon")
+	if err != nil {
+		log.Fatal("Failed to delete tmp location for isi-volumes")
+	}
 }

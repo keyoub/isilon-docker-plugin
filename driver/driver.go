@@ -18,7 +18,6 @@ type volume struct {
 
 type isiDriver struct {
 	volumes map[string]*volume
-	//mutex       sync.Mutex
 }
 
 func NewIsilonDriver() isiDriver {

@@ -3,10 +3,11 @@ PACKAGES := \
 	github.west.isilon.com/bkeyoumarsi/docker-plugin/driver
 DEPENDENCIES := github.com/calavera/dkvolume
 
-all: build silent-test
+install: deps
+	go install -o isi-plugin
 
 build:
-	go build -o plugin
+	go build -o isi-plugin
 
 test:
 	go test -v $(PACKAGES)
