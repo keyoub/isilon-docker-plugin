@@ -10,7 +10,7 @@ import (
 	"github.com/calavera/dkvolume"
 )
 
-const mountPoint = "/tmp/isilon/volumes/"
+const mountPoint = "/var/lib/isilon/volumes/"
 
 type volume struct {
 	name        string
@@ -18,14 +18,20 @@ type volume struct {
 }
 
 type isiDriver struct {
-	volumes map[string]*volume
-	m       *sync.Mutex
+	volumes        map[string]*volume
+	clusterAddress string
+	username       string
+	password       string
+	m              *sync.Mutex
 }
 
-func NewIsilonDriver() isiDriver {
+func NewIsilonDriver(addr string, usr string, pas string) isiDriver {
 	d := isiDriver{
-		volumes: map[string]*volume{},
-		m:       &sync.Mutex{},
+		volumes:        map[string]*volume{},
+		clusterAddress: addr,
+		username:       usr,
+		password:       pas,
+		m:              &sync.Mutex{},
 	}
 	return d
 }
