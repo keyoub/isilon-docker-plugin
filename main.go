@@ -9,7 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/calavera/dkvolume"
-	"github.west.isilon.com/bkeyoumarsi/docker-plugin/driver"
+	"github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/driver"
 )
 
 const (

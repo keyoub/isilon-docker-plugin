@@ -26,7 +26,7 @@ $ chown nobody:nobody /ifs/data/docker/volumes
 
 To start the plugin run the commands below on Docker host where plugin is installed:
 ```bash
-$ sudo $GOPATH/bin/isi-plugin -cluster-ip <IP-ADDRESS-OF-ISILON-CLUSTER>
+$ sudo $GOPATH/bin/isilon-docker-plugin -cluster-ip <IP-ADDRESS-OF-ISILON-CLUSTER>
 ```
 
 To use the plugin with your containers pass ```--volume-driver=isilon``` option to the docker run command.

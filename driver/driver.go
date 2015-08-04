@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/calavera/dkvolume"
 )
@@ -18,11 +19,13 @@ type volume struct {
 
 type isiDriver struct {
 	volumes map[string]*volume
+	m       *sync.Mutex
 }
 
 func NewIsilonDriver() isiDriver {
 	d := isiDriver{
 		volumes: map[string]*volume{},
+		m:       &sync.Mutex{},
 	}
 	return d
 }
@@ -33,6 +36,8 @@ func (d *isiDriver) mountpoint(name string) string {
 
 func (d isiDriver) Create(req dkvolume.Request) dkvolume.Response {
 	log.Printf("Create(%q)", req.Name)
+	d.m.Lock()
+	defer d.m.Unlock()
 	mountpoint := d.mountpoint(req.Name)
 
 	// If volume already in vdb then just return ok
@@ -45,6 +50,8 @@ func (d isiDriver) Create(req dkvolume.Request) dkvolume.Response {
 
 func (d isiDriver) Remove(req dkvolume.Request) dkvolume.Response {
 	log.Printf("Remove(%q)", req.Name)
+	d.m.Lock()
+	defer d.m.Unlock()
 	mountpoint := d.mountpoint(req.Name)
 
 	if volume, found := d.volumes[mountpoint]; found {
@@ -64,12 +71,13 @@ func (d isiDriver) Remove(req dkvolume.Request) dkvolume.Response {
 }
 
 func (d isiDriver) Path(req dkvolume.Request) dkvolume.Response {
-	log.Printf("Path(%q)", req.Name)
 	return dkvolume.Response{Mountpoint: d.mountpoint(req.Name)}
 }
 
 func (d isiDriver) Mount(req dkvolume.Request) dkvolume.Response {
 	log.Printf("Mount(%q)", req.Name)
+	d.m.Lock()
+	defer d.m.Unlock()
 	mountpoint := d.mountpoint(req.Name)
 
 	vol, ok := d.volumes[mountpoint]
@@ -99,6 +107,8 @@ func (d isiDriver) Mount(req dkvolume.Request) dkvolume.Response {
 
 func (d isiDriver) Unmount(req dkvolume.Request) dkvolume.Response {
 	log.Printf("Unmount(%q)", req.Name)
+	d.m.Lock()
+	defer d.m.Unlock()
 	mountpoint := d.mountpoint(req.Name)
 
 	if volume, ok := d.volumes[mountpoint]; ok {

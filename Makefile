@@ -1,10 +1,10 @@
 PACKAGES := \
-	github.west.isilon.com/bkeyoumarsi/docker-plugin \
-	github.west.isilon.com/bkeyoumarsi/docker-plugin/driver
+	github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin \
+	github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/driver
 DEPENDENCIES := github.com/calavera/dkvolume
 
 install: deps
-	go install -o isi-plugin
+	go install
 
 build:
 	go build -o isi-plugin
