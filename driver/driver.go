@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/calavera/dkvolume"
+	"github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/rest"
 )
 
 const mountPoint = "/var/lib/isilon/volumes/"
@@ -18,20 +19,16 @@ type volume struct {
 }
 
 type isiDriver struct {
-	volumes        map[string]*volume
-	clusterAddress string
-	username       string
-	password       string
-	m              *sync.Mutex
+	volumes    map[string]*volume
+	restClient *rest.Client
+	m          *sync.Mutex
 }
 
-func NewIsilonDriver(addr string, usr string, pas string) isiDriver {
+func NewIsilonDriver(addr string, usr string, pass string) isiDriver {
 	d := isiDriver{
-		volumes:        map[string]*volume{},
-		clusterAddress: addr,
-		username:       usr,
-		password:       pas,
-		m:              &sync.Mutex{},
+		volumes:    map[string]*volume{},
+		restClient: rest.NewClient(addr, usr, pass),
+		m:          &sync.Mutex{},
 	}
 	return d
 }
