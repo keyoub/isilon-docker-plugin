@@ -28,6 +28,14 @@ type aclRequest struct {
 	Group         ownership `json:"group"`
 }
 
+type volume struct {
+	Name string `json:"name"`
+}
+
+type volumeDirectory struct {
+	Children []volume `json:"children"`
+}
+
 type Client struct {
 	httpClient *http.Client
 	addr       string
@@ -42,44 +50,23 @@ func NewClient(addr, usr, pass string) *Client {
 	return &Client{&http.Client{Transport: tr}, addr, usr, pass}
 }
 
-/*func (r Client) VolumeExist(name string) (bool, error) {
-	vols, err := r.volumes()
+func (r Client) CheckVolume(name string) (bool, error) {
+	volumes, err := r.getVolumes()
 	if err != nil {
 		return false, err
 	}
 
-	for _, v := range vols {
+	for _, v := range volumes.Children {
 		if v.Name == name {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
-func (r Client) volumes() ([]volume, error) {
-	u := fmt.Sprintf("%s%s", r.addr, volumesPath)
-
-	res, err := http.Get(u)
-	if err != nil {
-		return nil, err
-	}
-
-	var d volumeResponse
-	if err := json.NewDecoder(res.Body).Decode(&d); err != nil {
-		return nil, err
-	}
-
-	if !d.Ok {
-		return nil, fmt.Errorf(d.Err)
-	}
-	return d.Data, nil
-}
-*/
 func (r Client) CreateVolume(name string) error {
 	u := fmt.Sprintf("https://%s:8080/namespace%s", r.addr,
 		fmt.Sprintf("%s%s/", volumesPath, name))
-	log.Println(u)
 
 	if err := r.ranCreate(u); err != nil {
 		return err
@@ -136,23 +123,39 @@ func (r Client) ranUpdatePerm(url string) error {
 	return responseCheck(resp)
 }
 
-/*
-func (r Client) StopVolume(name string) error {
-	u := fmt.Sprintf("%s%s", r.addr, fmt.Sprintf(volumeStopPath, name))
+func (r Client) getVolumes() (volumeDirectory, error) {
+	var data volumeDirectory
+	u := fmt.Sprintf("https://%s:8080/namespace%s", r.addr, volumesPath)
 
-	req, err := http.NewRequest("PUT", u, nil)
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
-		return err
+		log.Println(err.Error())
+		return data, err
+	}
+	req.SetBasicAuth(r.usr, r.pass)
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return data, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		log.Println(err.Error())
+		return data, err
 	}
 
-	return responseCheck(resp)
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		log.Println(err.Error())
+		return data, err
+	}
+
+	return data, nil
 }
-*/
+
 func responseCheck(resp *http.Response) error {
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
