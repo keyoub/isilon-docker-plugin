@@ -1,15 +1,18 @@
 package rest
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 )
 
 const (
-	volumesPath      = "/ifs/docker/volumes"
-	volumeCreatePath = "/ifs/docker/volumes/"
-	volumeStopPath   = "/api/1.0/volume/%s/stop"
+	volumesPath = "/ifs/data/docker/volumes/"
 )
 
 type ownership struct {
@@ -25,32 +28,21 @@ type aclRequest struct {
 	Group         ownership `json:"group"`
 }
 
-type response struct {
-	Ok  bool   `json:"ok"`
-	Err string `json:"error,omitempty"`
-}
-
-type peerResponse struct {
-	//Data []peer `json:"data",omitempty`
-	response
-}
-
-type volumeResponse struct {
-	//Data []volume `json:"data",omitempty`
-	response
-}
-
 type Client struct {
-	addr string
-	usr  string
-	pass string
+	httpClient *http.Client
+	addr       string
+	usr        string
+	pass       string
 }
 
 func NewClient(addr, usr, pass string) *Client {
-	return &Client{addr, usr, pass}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	return &Client{&http.Client{Transport: tr}, addr, usr, pass}
 }
 
-func (r Client) VolumeExist(name string) (bool, error) {
+/*func (r Client) VolumeExist(name string) (bool, error) {
 	vols, err := r.volumes()
 	if err != nil {
 		return false, err
@@ -83,22 +75,68 @@ func (r Client) volumes() ([]volume, error) {
 	}
 	return d.Data, nil
 }
+*/
+func (r Client) CreateVolume(name string) error {
+	u := fmt.Sprintf("https://%s:8080/namespace%s", r.addr,
+		fmt.Sprintf("%s%s/", volumesPath, name))
+	log.Println(u)
 
-func (r Client) CreateVolume(name string, peers []string) error {
-	u := fmt.Sprintf("%s:8080/namespace%s", r.addr,
-		fmt.Sprintf("%s%s", volumeCreatePath, name))
-	fmt.Println(u)
-
-	req, err := http.NewRequest("PUT", u, nil)
-	if err != nil {
+	if err := r.ranCreate(u); err != nil {
+		return err
+	}
+	if err := r.ranUpdatePerm(fmt.Sprintf("%s?acl", u)); err != nil {
 		return err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	return nil
+}
+
+func (r Client) ranCreate(url string) error {
+	req, err := http.NewRequest("PUT", url, nil)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	req.SetBasicAuth(r.usr, r.pass)
+	req.Header.Add("x-isi-ifs-target-type", "container")
+	req.Header.Add("x-isi-ifs-access-control", "0765")
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	return responseCheck(resp)
+}
+
+func (r Client) ranUpdatePerm(url string) error {
+	var data = aclRequest{
+		"acl",
+		"update",
+		ownership{"UID:65534", "nobody", "user"},
+		ownership{"GID:65534", "nobody", "group"},
+	}
+
+	b, err := json.Marshal(data)
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(b))
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	req.SetBasicAuth(r.usr, r.pass)
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
 
 	return responseCheck(resp)
 }
 
+/*
 func (r Client) StopVolume(name string) error {
 	u := fmt.Sprintf("%s%s", r.addr, fmt.Sprintf(volumeStopPath, name))
 
@@ -114,16 +152,14 @@ func (r Client) StopVolume(name string) error {
 
 	return responseCheck(resp)
 }
-
+*/
 func responseCheck(resp *http.Response) error {
-	var p response
-	if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
-		return err
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		log.Printf("Status: %d\n", resp.StatusCode)
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Printf("err: %s\n", string(body))
+		return errors.New(string(body))
 	}
-
-	if !p.Ok {
-		return fmt.Errorf(p.Err)
-	}
-
 	return nil
 }
