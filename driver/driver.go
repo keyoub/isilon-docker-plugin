@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 
@@ -11,7 +12,7 @@ import (
 	"github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/rest"
 )
 
-const mountPoint = "/var/lib/isilon/volumes/"
+const mountPath = "/tmp/lib/isilon/volumes/"
 
 type volume struct {
 	name        string
@@ -19,22 +20,24 @@ type volume struct {
 }
 
 type isiDriver struct {
-	volumes    map[string]*volume
-	restClient *rest.Client
-	m          *sync.Mutex
+	clusterPath string
+	volumes     map[string]*volume
+	restClient  *rest.Client
+	m           *sync.Mutex
 }
 
-func NewIsilonDriver(addr string, usr string, pass string) isiDriver {
+func NewIsilonDriver(addr, usr, pass string) isiDriver {
 	d := isiDriver{
-		volumes:    map[string]*volume{},
-		restClient: rest.NewClient(addr, usr, pass),
-		m:          &sync.Mutex{},
+		clusterPath: fmt.Sprintf("%s:/ifs/data/docker/volumes/", addr),
+		volumes:     map[string]*volume{},
+		restClient:  rest.NewClient(addr, usr, pass),
+		m:           &sync.Mutex{},
 	}
 	return d
 }
 
 func (d *isiDriver) mountpoint(name string) string {
-	return filepath.Join(mountPoint, name)
+	return filepath.Join(mountPath, name)
 }
 
 func (d isiDriver) Create(req dkvolume.Request) dkvolume.Response {
@@ -46,6 +49,20 @@ func (d isiDriver) Create(req dkvolume.Request) dkvolume.Response {
 	// If volume already in vdb then just return ok
 	if _, ok := d.volumes[mountpoint]; ok {
 		return dkvolume.Response{}
+	}
+
+	exist, err := d.restClient.CheckVolume(req.Name)
+	if err != nil {
+		log.Printf("Failed to check volume %s existence\n", req.Name)
+		return dkvolume.Response{Err: "Failed to create volume"}
+	}
+
+	if !exist {
+		err = d.restClient.CreateVolume(req.Name)
+		if err != nil {
+			log.Printf("Failed to create volume %s\n", req.Name)
+			return dkvolume.Response{Err: "Failed to create volume"}
+		}
 	}
 
 	return dkvolume.Response{}
@@ -64,7 +81,15 @@ func (d isiDriver) Remove(req dkvolume.Request) dkvolume.Response {
 			return dkvolume.Response{Err: "Volume in use by other containers"}
 		}
 		delete(d.volumes, mountpoint)
-		err := os.RemoveAll(mountpoint)
+
+		cmd := exec.Command("umount", mountpoint)
+
+		err := cmd.Run()
+		if err != nil {
+			return dkvolume.Response{Err: "Failed to unmount and remove volume"}
+		}
+
+		err = os.RemoveAll(mountpoint)
 		if err != nil {
 			log.Printf("Failed to delete volume %s", mountpoint)
 			return dkvolume.Response{Err: err.Error()}
@@ -101,6 +126,15 @@ func (d isiDriver) Mount(req dkvolume.Request) dkvolume.Response {
 
 	if fi != nil && !fi.IsDir() {
 		return dkvolume.Response{Err: fmt.Sprintf("%v already exist and it's not a directory", mountpoint)}
+	}
+
+	nfsPath := fmt.Sprintf("%s%s", d.clusterPath, req.Name)
+	cmd := exec.Command("mount", "-t", "nfs", "-o", "noacl",
+		nfsPath, mountpoint)
+
+	err = cmd.Run()
+	if err != nil {
+		return dkvolume.Response{Err: "Failed to mount volume"}
 	}
 
 	d.volumes[mountpoint] = &volume{name: req.Name, connections: 1}
