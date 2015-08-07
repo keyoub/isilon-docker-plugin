@@ -12,7 +12,7 @@ import (
 	"github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/rest"
 )
 
-const mountPath = "/tmp/lib/isilon/volumes/"
+const mountPath = "/var/lib/isilon/volumes/"
 
 type volume struct {
 	name        string

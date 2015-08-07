@@ -87,7 +87,7 @@ func (r Client) ranCreate(url string) error {
 
 	req.SetBasicAuth(r.usr, r.pass)
 	req.Header.Add("x-isi-ifs-target-type", "container")
-	req.Header.Add("x-isi-ifs-access-control", "0765")
+	req.Header.Add("x-isi-ifs-access-control", "public_read_write")
 
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
