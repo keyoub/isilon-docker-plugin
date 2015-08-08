@@ -11,14 +11,14 @@ are hosted on an Isilon cluster therefore making all Isilon data management tool
 - Install and setup Go environment: http://golang.org/doc/install
 - Install EMC Isilon volume-driver plugin for Docker containers
 ```bash
-$ git clone https://github.west.isilon.com/bkeyoumarsi/docker-plugin $GOPATH/src/github.west.isilon.com/bkeyoumarsi/docker-plugin
-$ cd $GOPATH/src/github.west.isilon.com/bkeyoumarsi/docker-plugin
+$ go get github.com/bkeyoumarsi/isilon-docker-plugin
+$ cd $GOPATH/src/github.com/bkeyoumarsi/isilon-docker-plugin
 $ make install
 ```
 ## Usage Instructions
 To use the driver a bit of preparation on the Isilon cluster is needed.
 
-On the Isilon cluster, run the following commands with admin privs:
+On the Isilon cluster, run the following commands with root privileges:
 ```bash
 $ mkdir -p /ifs/data/docker/volumes
 $ chown nobody:nobody /ifs/data/docker/volumes
@@ -26,10 +26,13 @@ $ chown nobody:nobody /ifs/data/docker/volumes
 
 To start the plugin run the commands below on Docker host where plugin is installed:
 ```bash
-$ sudo $GOPATH/bin/isilon-docker-plugin -cluster-ip <IP-ADDRESS-OF-ISILON-CLUSTER>
+$ sudo $GOPATH/bin/isilon-docker-plugin -cluster-ip <x.x.x.x> -username=<root-user> -password=<password>
 ```
 
 To use the plugin with your containers pass ```--volume-driver=isilon``` option to the docker run command.
+```bash
+$ docker run -it --volume-driver=isilon -v test_volume:/data ubuntu /bin/bash
+```
 ## Future
 - Add better testing
 - Add more protocol support (smb, swift, ...)

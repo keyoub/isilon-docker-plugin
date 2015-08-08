@@ -4,8 +4,8 @@ import (
 	"flag"
 	"log"
 
+	"github.com/bkeyoumarsi/isilon-docker-plugin/driver"
 	"github.com/calavera/dkvolume"
-	"github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/driver"
 )
 
 const (

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/bkeyoumarsi/isilon-docker-plugin/rest"
 	"github.com/calavera/dkvolume"
-	"github.west.isilon.com/bkeyoumarsi/isilon-docker-plugin/rest"
 )
 
 const mountPath = "/var/lib/isilon/volumes/"
