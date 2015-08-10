@@ -16,22 +16,22 @@ $ cd $GOPATH/src/github.com/bkeyoumarsi/isilon-docker-plugin
 $ make install
 ```
 ## Usage Instructions
-To use the driver a bit of preparation on the Isilon cluster is needed.
-
-On the Isilon cluster, run the following commands with root privileges:
-```bash
-$ mkdir -p /ifs/data/docker/volumes
-$ chown nobody:nobody /ifs/data/docker/volumes
-```
-
 To start the plugin run the commands below on Docker host where plugin is installed:
 ```bash
-$ sudo $GOPATH/bin/isilon-docker-plugin -cluster-ip <x.x.x.x> -username=<root-user> -password=<password>
+$ sudo $GOPATH/bin/isilon-docker-plugin -cluster-ip <x.x.x.x> -username=<root-enabled-user> -password=<password>
 ```
 
 To use the plugin with your containers pass ```--volume-driver=isilon``` option to the docker run command.
 ```bash
 $ docker run -it --volume-driver=isilon -v test_volume:/data ubuntu /bin/bash
+```
+
+You can list and manage all volumes on the Isilon cluster.
+```bash
+$ pwd
+/ifs/data/docker/volumes
+$ ls
+test_volume
 ```
 ## Future
 - Add better testing
