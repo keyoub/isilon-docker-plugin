@@ -142,10 +142,11 @@ func (d isiDriver) Unmount(req dkvolume.Request) dkvolume.Response {
 	mountpoint := d.mountpoint(req.Name)
 
 	if volume, ok := d.volumes[mountpoint]; ok {
-		cmd := exec.Command("umount", mountpoint)
-		err := cmd.Run()
-		if err != nil {
-			return dkvolume.Response{Err: "Failed to unmount volume"}
+		if volume.connections == 1 {
+			cmd := exec.Command("umount", mountpoint)
+			if err := cmd.Run(); err != nil {
+				return dkvolume.Response{Err: "Failed to unmount volume"}
+			}
 		}
 		volume.connections--
 	} else {
