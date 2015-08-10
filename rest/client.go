@@ -79,7 +79,7 @@ func (r Client) CreateVolume(name string) error {
 }
 
 func (r Client) ranCreate(url string) error {
-	req, err := http.NewRequest("PUT", url, nil)
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s?recursive=true", url), nil)
 	if err != nil {
 		log.Println(err.Error())
 		return err
