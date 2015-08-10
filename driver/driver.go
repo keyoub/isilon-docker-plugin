@@ -82,14 +82,7 @@ func (d isiDriver) Remove(req dkvolume.Request) dkvolume.Response {
 		}
 		delete(d.volumes, mountpoint)
 
-		cmd := exec.Command("umount", mountpoint)
-
-		err := cmd.Run()
-		if err != nil {
-			return dkvolume.Response{Err: "Failed to unmount and remove volume"}
-		}
-
-		err = os.RemoveAll(mountpoint)
+		err := os.RemoveAll(mountpoint)
 		if err != nil {
 			log.Printf("Failed to delete volume %s", mountpoint)
 			return dkvolume.Response{Err: err.Error()}
@@ -149,6 +142,11 @@ func (d isiDriver) Unmount(req dkvolume.Request) dkvolume.Response {
 	mountpoint := d.mountpoint(req.Name)
 
 	if volume, ok := d.volumes[mountpoint]; ok {
+		cmd := exec.Command("umount", mountpoint)
+		err := cmd.Run()
+		if err != nil {
+			return dkvolume.Response{Err: "Failed to unmount volume"}
+		}
 		volume.connections--
 	} else {
 		return dkvolume.Response{Err: fmt.Sprintf("Unable to find volume mounted on %s", mountpoint)}
